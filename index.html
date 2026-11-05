@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Price Lister — Corporate Product & Invoicing Infrastructure</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans, Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            red: '#E11D48',
+                            crimson: '#BE123C',
+                            black: '#09090B',
+                            slate: '#52525B',
+                            surface: '#FAFAFA',
+                            pure: '#FFFFFF',
+                            line: '#E4E4E7'
+                        }
+                    },
+                    screens: {
+                        '3xl': '1920px',
+                        '4xl': '2560px',
+                    },
+                    animation: {
+                        'scan': 'scan 2.6s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                        'float-subtle': 'floatSubtle 5s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%, 100%': { top: '10%' },
+                            '50%': { top: '86%' },
+                        },
+                        floatSubtle: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-6px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ==========================================================================
+           ENTERPRISE WHITE — ARTCRAFT ARCHITECTURAL GRID & MOUSE SPAWN ENGINE
+           ========================================================================== */
+        :root {
+            --mouse-x: 50vw;
+            --mouse-y: 50vh;
+            --brand-red: #E11D48;
+            --grid-color: rgba(9, 9, 11, 0.065);
+        }
+
+        body {
+            background-color: #FAFAFA;
+            color: #09090B;
+            overflow-x: hidden;
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+        }
+
+        ::selection {
+            background: #E11D48;
+            color: #FFFFFF;
+        }
+
+        /* Architectural Grid Background + Mouse Interactive Spotlight */
+        .artcraft-grid-bg {
+            background-size: 64px 64px;
+            background-image: 
+                linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+        }
+
+        /* Dynamic Mouse Follower Glow Layer */
+        #cursorSpotlight {
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background: radial-gradient(
+                650px circle at var(--mouse-x) var(--mouse-y),
+                rgba(225, 29, 72, 0.055),
+                rgba(9, 9, 11, 0.015) 40%,
+                transparent 80%
+            );
+            transition: background 0.08s linear;
+        }
+
+        /* Glossy White Glass Cards with Mouse-Reactive Border Highlight */
+        .white-glass-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(9, 9, 11, 0.08);
+            box-shadow: 
+                0 1px 2px rgba(9, 9, 11, 0.03),
+                0 12px 32px -8px rgba(9, 9, 11, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                        box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                        border-color 0.35s ease;
+            overflow: hidden;
+        }
+
+        .white-glass-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(
+                420px circle at var(--card-mouse-x, -500px) var(--card-mouse-y, -500px),
+                rgba(225, 29, 72, 0.08),
+                transparent 60%
+            );
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            pointer-events: none;
+        }
+
+        .white-glass-card:hover::before {
+            opacity: 1;
+        }
+
+        .white-glass-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(225, 29, 72, 0.35);
+            box-shadow: 
+                0 4px 12px rgba(9, 9, 11, 0.04),
+                0 24px 48px -12px rgba(225, 29, 72, 0.10),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+        }
+
+        /* Architectural Crosshairs on Grid Intersections */
+        .grid-crosshair {
+            position: relative;
+        }
+        .grid-crosshair::after {
+            content: "+";
+            position: absolute;
+            top: -10px;
+            right: -8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: rgba(9, 9, 11, 0.25);
+            pointer-events: none;
+        }
+
+        /* 0-to-Load Real-Time Spawn Animations (Scroll + Cursor Proximity) */
+        .spawn-item {
+            opacity: 0;
+            transform: translateY(28px) scale(0.975);
+            filter: blur(6px);
+            transition: 
+                opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                filter 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform, filter;
+        }
+
+        .spawn-item.spawned {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+        }
+
+        /* Micro-interaction Buttons */
+        .btn-corporate-red {
+            background: linear-gradient(180deg, #E11D48 0%, #BE123C 100%);
+            color: #FFFFFF;
+            box-shadow: 0 2px 4px rgba(225, 29, 72, 0.2), 0 10px 24px -6px rgba(225, 29, 72, 0.4);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-corporate-red:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(225, 29, 72, 0.3), 0 16px 32px -6px rgba(225, 29, 72, 0.5);
+        }
+
+        .btn-corporate-white {
+            background: rgba(255, 255, 255, 0.9);
+            color: #09090B;
+            border: 1px solid rgba(9, 9, 11, 0.14);
+            box-shadow: 0 1px 2px rgba(9, 9, 11, 0.04);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-corporate-white:hover {
+            border-color: #09090B;
+            background: #09090B;
+            color: #FFFFFF;
+            transform: translateY(-2px);
+        }
+
+        /* Subtle Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FAFAFA;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D4D4D8;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #E11D48;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col artcraft-grid-bg relative antialiased">
+
+    <!-- Interactive Mouse Follower Spotlight -->
+    <div id="cursorSpotlight"></div>
+
+    <!-- Architectural Vertical Structural Guide Lines (Artcraft Style) -->
+    <div class="pointer-events-none fixed inset-0 z-0 max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 3xl:px-16 flex justify-between">
+        <div class="w-px h-full bg-zinc-900/[0.06]"></div>
+        <div class="hidden md:block w-px h-full bg-zinc-900/[0.04]"></div>
+        <div class="hidden xl:block w-px h-full bg-zinc-900/[0.04]"></div>
+        <div class="w-px h-full bg-zinc-900/[0.06]"></div>
+    </div>
+
+    <!-- ========================================================================== -->
+    <!-- STICKY MINIMALIST GLOSSY WHITE HEADER                                      -->
+    <!-- ========================================================================== -->
+    <header class="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/80 border-b border-zinc-200/80 transition-all">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 3xl:px-16 h-20 flex items-center justify-between gap-4">
+            
+            <!-- Brand Identity -->
+            <button onclick="switchPage('home')" class="flex items-center gap-3.5 text-left group focus:outline-none">
+                <img src="PriceLister.svg" alt="Price Lister Logo" class="w-10 h-10 rounded-lg bg-brand-red/10 border border-brand-red/20 flex items-center justify-center text-brand-red group-hover:bg-brand-red/20 transition-colors">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-display font-extrabold text-lg sm:text-xl tracking-tight text-brand-black">PRICE LISTER<span></span>
+                        <span class="hidden sm:inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider bg-zinc-100 text-zinc-800 border border-zinc-200 rounded-md">CORP v4.2</span>
+                    </div>
+                    <p class="text-[11px] text-zinc-500 hidden sm:block font-medium">Enterprise Product Store Engine</p>
+                </div>
+            </button>
+
+            <!-- Center Navigation -->
+            <nav class="hidden md:flex items-center gap-6 h-full">
+                <button onclick="switchPage('home')" class="text-sm font-medium text-zinc-600 hover:text-brand-black transition-colors">Home</button>
+                <button onclick="switchPage('explore')" class="text-sm font-medium text-zinc-600 hover:text-brand-black transition-colors">Features</button>
+                <button onclick="switchPage('about')" class="text-sm font-medium text-zinc-600 hover:text-brand-black transition-colors">Architecture</button>
+                <button onclick="switchPage('pricing')" class="text-sm font-medium text-zinc-600 hover:text-brand-black transition-colors">Pricing</button>
+                <button onclick="switchPage('apps')" class="text-sm font-medium text-brand-black hover:text-brand-red transition-colors flex items-center gap-1.5">Get</button>
+            </nav>
+
+            <!-- Right Action Bar: Sign In & Console -->
+            <div class="flex items-center gap-4">
+                <a href="https://pricelister-xi.vercel.app/login.html" class="hidden sm:block text-sm font-bold text-brand-black hover:text-brand-red transition-colors">
+                    Sign in
+                </a>
+                <a href="https://pricelister-xi.vercel.app/" class="btn-corporate-red px-5 py-2.5 rounded-xl font-display font-semibold text-xs sm:text-sm flex items-center gap-2">
+                    <span>Console</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4 opacity-90"></i>
+                </a>
+
+                <!-- Mobile Menu Trigger -->
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2.5 rounded-xl bg-white border border-zinc-200 text-brand-black hover:border-brand-red">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Drawer -->
+        <div id="mobileNavDrawer" class="hidden md:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-2xl px-4 pt-3 pb-6 space-y-2">
+            <button onclick="switchPage('home'); toggleMobileMenu()" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-left font-semibold text-brand-black bg-zinc-100">
+                <span>Home</span>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-brand-red"></i>
+            </button>
+            <button onclick="switchPage('explore'); toggleMobileMenu()" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-left font-medium text-zinc-600 hover:bg-zinc-50">
+                <span>Features</span>
+            </button>
+            <button onclick="switchPage('about'); toggleMobileMenu()" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-left font-medium text-zinc-600 hover:bg-zinc-50">
+                <span>Architecture</span>
+            </button>
+            <button onclick="switchPage('pricing'); toggleMobileMenu()" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-left font-medium text-zinc-600 hover:bg-zinc-50">
+                <span>Pricing</span>
+            </button>
+            <button onclick="switchPage('apps'); toggleMobileMenu()" class="w-full flex items-center justify-between px-4 py-3 rounded-xl text-left font-medium text-zinc-600 hover:bg-zinc-50">
+                <span>Get</span>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-brand-red"></i>
+            </button>
+            <div class="pt-3 grid grid-cols-1 gap-2.5">
+                <a href="https://pricelister-xi.vercel.app/login.html" class="py-3 rounded-xl border border-zinc-200 font-display font-semibold text-sm flex items-center justify-center gap-2">
+                    <span>Sign In</span>
+                </a>
+                <a href="https://pricelister-xi.vercel.app/" class="py-3 rounded-xl btn-corporate-red font-display font-semibold text-sm flex items-center justify-center gap-2">
+                    <span>Open Console</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================================================== -->
+    <!-- MAIN UNIVERSAL VIEWPORT (MOBILE • LAPTOP • DESKTOP • 4K TV)                -->
+    <!-- ========================================================================== -->
+    <main class="flex-grow relative z-10 max-w-[1920px] w-full mx-auto px-4 sm:px-6 lg:px-10 3xl:px-16 py-10 sm:py-16">
+
+        <!-- ====================================================================== -->
+        <!-- PAGE 1: HOME (CORPORATE MODERN ARCHITECTURAL GRID)                     -->
+        <!-- ====================================================================== -->
+        <section id="page-home" class="space-y-24 sm:space-y-32">
+            
+            <!-- Architectural Top Status Strip -->
+            <div class="spawn-item border-y border-zinc-200/90 bg-white/60 backdrop-blur-md py-3 px-4 flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-zinc-600">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-2 h-2 rounded-full bg-brand-red animate-ping"></span>
+                    <span class="font-semibold text-brand-black">SYSTEM STATUS:</span>
+                    <span>FIREBASE AUTH + SUPABASE STORAGE + SQLITE ENGINE READY</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span>PERMISSIONS: <strong class="text-brand-black">CAMERA & INTERNET ONLY</strong></span>
+                    <span class="hidden sm:inline text-zinc-300">|</span>
+                    <span class="hidden sm:inline">BUILD: <strong class="text-brand-red">UNIVERSAL 4K/MOBILE</strong></span>
+                </div>
+            </div>
+
+            <!-- Hero Grid Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+                
+                <!-- Left Column: Formal Corporate Typography -->
+                <div class="lg:col-span-7 space-y-8">
+                    <div class="spawn-item inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white border border-zinc-200 shadow-sm text-xs font-medium text-zinc-700">
+                        <span class="px-2 py-0.5 rounded-full bg-brand-red text-white font-mono font-semibold text-[10px] uppercase">Enterprise</span>
+                        <span>Precision Price Listing & Dual B2C / B2B Invoicing</span>
+                    </div>
+
+                    <h1 class="spawn-item font-display font-extrabold text-4xl sm:text-6xl xl:text-7xl 3xl:text-8xl tracking-tight text-brand-black leading-[1.04]">
+                        Structured Commerce. <br>
+                        <span class="text-brand-red">Instant Invoicing.</span>
+                    </h1>
+
+                    <p class="spawn-item text-zinc-600 text-base sm:text-lg xl:text-xl max-w-2xl font-normal leading-relaxed">
+                        A formal, high-reliability financial workspace for modern businesses. Create structured product price lists, issue <span class="text-brand-black font-semibold">Customer & Business Invoices</span>, manage client directories, export to <span class="text-brand-black font-semibold">PDF & Excel</span>, and maintain sovereign <span class="text-brand-red font-semibold">SQLite backups</span> with <span class="text-brand-black font-semibold">Supabase Cloud</span>.
+                    </p>
+
+                    <!-- Separate Console & App Action Buttons -->
+                    <div class="spawn-item flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+                        <!-- Console Button -> External Live Vercel App -->
+                        <a href="https://pricelister-xi.vercel.app/" target="_blank" rel="noopener noreferrer" class="btn-corporate-red px-8 py-4 rounded-2xl font-display font-bold text-base flex items-center justify-center gap-3 group">
+                            <i data-lucide="terminal-square" class="w-5 h-5"></i>
+                            <span>Launch Web Console</span>
+                            <i data-lucide="arrow-up-right" class="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"></i>
+                        </a>
+                    </div>
+
+                    <!-- Architectural Metrics Bar -->
+                    <div class="spawn-item pt-6 grid grid-cols-2 sm:grid-cols-4 border-t border-zinc-200/90 gap-6">
+                        <div class="grid-crosshair pr-4">
+                            <div class="font-mono text-xs uppercase text-zinc-400">Export Formats</div>
+                            <div class="font-display font-bold text-xl sm:text-2xl text-brand-black mt-1">PDF & Excel</div>
+                            <div class="text-xs text-zinc-500 mt-0.5">Instant Batch Ready</div>
+                        </div>
+                        <div class="grid-crosshair pr-4">
+                            <div class="font-mono text-xs uppercase text-zinc-400">Local Engine</div>
+                            <div class="font-display font-bold text-xl sm:text-2xl text-brand-red mt-1">SQLite 3</div>
+                            <div class="text-xs text-zinc-500 mt-0.5">Offline-First Backup</div>
+                        </div>
+                        <div class="grid-crosshair pr-4">
+                            <div class="font-mono text-xs uppercase text-zinc-400">Cloud Sync</div>
+                            <div class="font-display font-bold text-xl sm:text-2xl text-brand-black mt-1">Supabase</div>
+                            <div class="text-xs text-zinc-500 mt-0.5">PostgreSQL + Buckets</div>
+                        </div>
+                        <div>
+                            <div class="font-mono text-xs uppercase text-zinc-400">Manifest</div>
+                            <div class="font-display font-bold text-xl sm:text-2xl text-brand-black mt-1">2 Perms</div>
+                            <div class="text-xs text-zinc-500 mt-0.5">Camera & Web Only</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Glossy White Interactive Executive Preview -->
+                <div class="lg:col-span-5">
+                    <div class="spawn-item white-glass-card rounded-3xl p-6 sm:p-8 border border-zinc-200/90 animate-float-subtle">
+                        <!-- Top Bar -->
+                        <div class="flex items-center justify-between pb-5 mb-6 border-b border-zinc-200/80">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-brand-red"></span>
+                                <span class="w-3 h-3 rounded-full bg-zinc-300"></span>
+                                <span class="w-3 h-3 rounded-full bg-zinc-300"></span>
+                                <span class="ml-2 text-xs font-mono text-zinc-500">pricelister-xi.vercel.app</span>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-md bg-brand-red/10 text-brand-red font-mono text-[11px] font-semibold">LIVE ENGINE</span>
+                        </div>
+
+                        <!-- Executive Summary Row -->
+                        <div class="grid grid-cols-3 gap-3 mb-5">
+                            <div class="p-3.5 rounded-2xl bg-zinc-50/90 border border-zinc-200/70">
+                                <span class="text-[11px] text-zinc-500 font-medium">Catalog SKUs</span>
+                                <div class="font-display font-bold text-xl text-brand-black mt-0.5">4,820</div>
+                                <span class="text-[10px] font-mono text-emerald-600">SQLite Verified</span>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-zinc-50/90 border border-zinc-200/70">
+                                <span class="text-[11px] text-zinc-500 font-medium">B2B / B2C</span>
+                                <div class="font-display font-bold text-xl text-brand-red mt-0.5">$84,290</div>
+                                <span class="text-[10px] font-mono text-zinc-500">Tax Compliant</span>
+                            </div>
+                            <div class="p-3.5 rounded-2xl bg-zinc-50/90 border border-zinc-200/70">
+                                <span class="text-[11px] text-zinc-500 font-medium">Cloud State</span>
+                                <div class="font-display font-bold text-xl text-brand-black mt-0.5">100%</div>
+                                <span class="text-[10px] font-mono text-emerald-600">Supabase RLS</span>
+                            </div>
+                        </div>
+
+                        <!-- Live Camera Optical Barcode Scanner Module -->
+                        <div class="relative rounded-2xl bg-brand-black text-white p-4 mb-5 overflow-hidden shadow-inner">
+                            <div class="w-full h-0.5 bg-gradient-to-r from-transparent via-brand-red to-transparent absolute left-0 animate-scan shadow-[0_0_12px_#E11D48]"></div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-brand-red/20 border border-brand-red/40 flex items-center justify-center text-brand-red">
+                                        <i data-lucide="camera" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-semibold text-white">Optical Camera Scanner</div>
+                                        <div class="text-[11px] text-zinc-400 font-mono">SKU-8841 • Industrial Laser Sensor</div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-mono font-bold text-white">$249.00</div>
+                                    <div class="text-[10px] font-mono text-brand-red">B2B: $210.00</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Structured Ledger Rows -->
+                        <div class="space-y-2.5">
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/80">
+                                <div class="flex items-center gap-3">
+                                    <span class="px-2 py-1 rounded bg-brand-red text-white font-mono text-[10px] font-bold">B2B</span>
+                                    <div>
+                                        <div class="text-xs font-bold text-brand-black">Krono Logistics Group</div>
+                                        <div class="text-[11px] text-zinc-500 font-mono">Business Invoice • PDF + Excel</div>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono font-bold text-brand-black">$6,420.00</span>
+                            </div>
+
+                            <div class="flex items-center justify-between p-3 rounded-xl bg-zinc-50 border border-zinc-200/80">
+                                <div class="flex items-center gap-3">
+                                    <span class="px-2 py-1 rounded bg-brand-black text-white font-mono text-[10px] font-bold">B2C</span>
+                                    <div>
+                                        <div class="text-xs font-bold text-brand-black">Retail Counter Receipt #409</div>
+                                        <div class="text-[11px] text-zinc-500 font-mono">Customer Invoice • Instant Print</div>
+                                    </div>
+                                </div>
+                                <span class="text-xs font-mono font-bold text-brand-black">$319.50</span>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Console Link -->
+                        <div class="mt-6 pt-4 border-t border-zinc-200/80 flex items-center justify-between">
+                            <span class="text-[11px] font-mono text-zinc-500 flex items-center gap-1.5">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-brand-red"></i>
+                                Firebase Auth • Supabase DB
+                            </span>
+                            <a href="https://pricelister-xi.vercel.app/" target="_blank" rel="noopener noreferrer" class="text-xs font-display font-bold text-brand-red hover:text-brand-black flex items-center gap-1 transition-colors">
+                                <span>Open Live Console</span>
+                                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2 Distinct Platform Variations (Artcraft Architectural Split Grid) -->
+            <div class="space-y-10">
+                <div class="spawn-item flex flex-col md:flex-row md:items-end justify-between border-b border-zinc-200 pb-6 gap-4">
+                    <div>
+                        <span class="text-xs font-mono uppercase tracking-widest text-brand-red font-semibold">01 / Dual Ecosystem</span>
+                        <h2 class="font-display font-extrabold text-3xl sm:text-5xl text-brand-black mt-1">Two Dedicated Variations.</h2>
+                    </div>
+                    <p class="text-zinc-500 text-sm sm:text-base max-w-md">
+                        Separated execution environments for desktop cloud administration and handheld Android barcode operations.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Variation A: Website Cloud Console -->
+                    <div class="spawn-item white-glass-card rounded-3xl p-8 sm:p-10 flex flex-col justify-between">
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between">
+                                <div class="w-12 h-12 rounded-2xl bg-brand-red text-white flex items-center justify-center shadow-md shadow-brand-red/20">
+                                    <i data-lucide="monitor" class="w-6 h-6"></i>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-brand-red/10 text-brand-red border border-brand-red/20">LIVE PRODUCTION</span>
+                            </div>
+                            <div>
+                                <h3 class="font-display font-bold text-2xl sm:text-3xl text-brand-black">Website Cloud Console</h3>
+                                <p class="text-zinc-600 text-sm sm:text-base mt-2 leading-relaxed">
+                                    High-density web workspace engineered for desktop, laptop, and widescreen displays. Manage master price lists, issue B2B/B2C invoices, and run batch PDF/Excel exports.
+                                </p>
+                            </div>
+                            <ul class="space-y-3 text-sm text-zinc-700 pt-2">
+                                <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Master Product Price Lister & Tiered B2B/B2C Rates</li>
+                                <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Customer Invoice & Corporate Business Tax Invoice</li>
+                                <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> One-Click Export to PDF, Excel (.CSV), & SQLite Snapshot</li>
+                                <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Hosted on Vercel with Firebase Auth & Supabase Cloud</li>
+                            </ul>
+                        </div>
+                        <div class="pt-8 mt-8 border-t border-zinc-200/80 flex flex-wrap items-center justify-between gap-4">
+                            <a href="https://pricelister-xi.vercel.app/" target="_blank" rel="noopener noreferrer" class="btn-corporate-red px-6 py-3.5 rounded-xl font-display font-bold text-sm flex items-center gap-2">
+                                <span>Enter Console</span>
+                                <i data-lucide="external-link" class="w-4 h-4"></i>
+                            </a>
+                            <span class="text-xs font-mono text-zinc-500">pricelister-xi.vercel.app</span>
+                        </div>
+                    </div>
+
+                    <!-- Variation B: Android Play Store App (Todo) -->
+                    <div class="spawn-item white-glass-card rounded-3xl p-8 sm:p-10 flex flex-col justify-between">
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between">
+                                <div class="w-12 h-12 rounded-2xl bg-brand-black text-white flex items-center justify-center">
+                                    <i data-lucide="smartphone" class="w-6 h-6"></i>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-zinc-100 text-zinc-800 border border-zinc-300">NATIVE APPS</span>
+                            </div>
+                            <div>
+                                <h3 class="font-display font-bold text-2xl sm:text-3xl text-brand-black">Mobile & Tablet Apps</h3>
+                                <p class="text-zinc-600 text-sm sm:text-base mt-2 leading-relaxed">
+                                    Dedicated mobile companions built for instant camera barcode scanning, offline SQLite storage, and handheld invoice dispatch on the shop floor.
+                                </p>
+                            </div>
+                            <ul class="space-y-3 text-sm text-zinc-700 pt-2">
+                                <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Hardware-Accelerated Camera Barcode & QR Scanner</li>
+                                <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Native Local SQLite Engine with Offline Queue</li>
+                                <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Strictly Only Camera & Internet Permissions Required</li>
+                            </ul>
+                        </div>
+                        <div class="pt-8 mt-8 border-t border-zinc-200/80 flex flex-wrap items-center gap-4">
+                            <a href="#" class="btn-corporate-white px-4 py-2.5 rounded-xl font-display font-bold text-xs flex items-center gap-2">
+                                <i data-lucide="play" class="w-4 h-4 text-brand-red"></i>
+                                <span>Android Play Store</span>
+                            </a>
+                            <a href="#" class="btn-corporate-white px-4 py-2.5 rounded-xl font-display font-bold text-xs flex items-center gap-2">
+                                <i data-lucide="apple" class="w-4 h-4 text-brand-black"></i>
+                                <span>App Store (iOS)</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================================== -->
+        <!-- PAGE 2: EXPLORE (ARCHITECTURAL FEATURE MATRIX)                         -->
+        <!-- ====================================================================== -->
+        <section id="page-explore" class="hidden space-y-16">
+            <div class="spawn-item border-b border-zinc-200 pb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-widest text-brand-red font-semibold">02 / Functional Specification</span>
+                    <h1 class="font-display font-extrabold text-4xl sm:text-6xl text-brand-black mt-2">Core System Modules.</h1>
+                </div>
+                <p class="text-zinc-600 text-base sm:text-lg max-w-xl">
+                    Designed with balanced corporate clarity. Every workflow—from product creation to SQLite database archiving—operates with zero friction.
+                </p>
+            </div>
+
+            <!-- 6 Core Capabilities Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Module 1 -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs text-zinc-400">MOD // 01</span>
+                        <div class="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red flex items-center justify-center">
+                            <i data-lucide="package-plus" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-display font-bold text-xl text-brand-black">Create Product & Price List</h3>
+                    <p class="text-sm text-zinc-600 leading-relaxed">
+                        Maintain structured SKU catalogs with dual retail (B2C) and wholesale (B2B) pricing, tax percentages, stock counts, and camera-scanned barcode identifiers.
+                    </p>
+                </div>
+
+                <!-- Module 2 -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs text-zinc-400">MOD // 02</span>
+                        <div class="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red flex items-center justify-center">
+                            <i data-lucide="receipt" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-display font-bold text-xl text-brand-black">Customer Invoice (B2C)</h3>
+                    <p class="text-sm text-zinc-600 leading-relaxed">
+                        Issue rapid retail invoices for walk-in or direct consumers. Automatically applies standard customer pricing, itemized taxes, and clean PDF receipt formatting.
+                    </p>
+                </div>
+
+                <!-- Module 3 -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs text-zinc-400">MOD // 03</span>
+                        <div class="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red flex items-center justify-center">
+                            <i data-lucide="building-2" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-display font-bold text-xl text-brand-black">Business Invoice (B2B)</h3>
+                    <p class="text-sm text-zinc-600 leading-relaxed">
+                        Formal corporate tax billing with buyer GST/VAT/TIN numbers, purchase order references, wholesale price lists, and multi-currency commercial terms.
+                    </p>
+                </div>
+
+                <!-- Module 4 -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs text-zinc-400">MOD // 04</span>
+                        <div class="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red flex items-center justify-center">
+                            <i data-lucide="users" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-display font-bold text-xl text-brand-black">Client & Business Directory</h3>
+                    <p class="text-sm text-zinc-600 leading-relaxed">
+                        Centralized CRM ledger for both retail customers and corporate accounts. Store verified tax IDs, billing addresses, and historical invoice trails.
+                    </p>
+                </div>
+
+                <!-- Module 5 -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs text-zinc-400">MOD // 05</span>
+                        <div class="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red flex items-center justify-center">
+                            <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-display font-bold text-xl text-brand-black">Export by PDF & Excel</h3>
+                    <p class="text-sm text-zinc-600 leading-relaxed">
+                        Generate high-resolution printable PDF price lists and invoices, or export structured Excel (.CSV / .XLSX) spreadsheets for accounting audits.
+                    </p>
+                </div>
+
+                <!-- Module 6 -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs text-zinc-400">MOD // 06</span>
+                        <div class="w-10 h-10 rounded-xl bg-brand-red/10 text-brand-red flex items-center justify-center">
+                            <i data-lucide="database" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="font-display font-bold text-xl text-brand-black">SQLite Backup & Dashboard</h3>
+                    <p class="text-sm text-zinc-600 leading-relaxed">
+                        Real-time executive KPIs backed by a dual-storage guarantee: local portable SQLite database files plus encrypted Supabase cloud replication.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Purely Informational Feature Breakdown Section -->
+            <div class="spawn-item white-glass-card rounded-3xl p-6 sm:p-10 border border-zinc-200/90 space-y-8">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zinc-200 pb-6">
+                    <div>
+                        <span class="text-xs font-mono uppercase tracking-widest text-brand-red font-semibold">Information Architecture</span>
+                        <h2 class="font-display font-bold text-2xl sm:text-3xl text-brand-black mt-1">Unified Data Synchronization</h2>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <a href="https://pricelister-xi.vercel.app/" target="_blank" rel="noopener noreferrer" class="btn-corporate-red px-5 py-2.5 rounded-xl text-xs font-display font-semibold flex items-center gap-2">
+                            <span>Open Full Production Console</span>
+                            <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Purely Informational Content Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center border border-zinc-200">
+                            <i data-lucide="server-cog" class="w-6 h-6 text-brand-black"></i>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-brand-black">Robust Real-Time Engine</h3>
+                        <p class="text-sm text-zinc-600 leading-relaxed">
+                            Instead of relying on fragile manual entry, Price Lister uses an offline-first SQLite database that seamlessly syncs with your encrypted Supabase cloud instance. All product SKUs, tax percentages, and B2B client registries remain instantly accessible across all Android devices and the Web Console.
+                        </p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="w-12 h-12 rounded-xl bg-brand-red/10 flex items-center justify-center border border-brand-red/20">
+                            <i data-lucide="shield-alert" class="w-6 h-6 text-brand-red"></i>
+                        </div>
+                        <h3 class="font-display font-bold text-xl text-brand-black">Bank-Grade Export Security</h3>
+                        <p class="text-sm text-zinc-600 leading-relaxed">
+                            Maintain total data sovereignty. With a single click in the production console, dispatch identical high-fidelity PDF invoices, output bulk Excel (.CSV) stock reports, or download raw `.sqlite3` backup payloads for your internal compliance archiving.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================================== -->
+        <!-- PAGE 3: ABOUT (STACK & STRICT PERMISSION MANIFEST)                     -->
+        <!-- ====================================================================== -->
+        <section id="page-about" class="hidden space-y-16">
+            <div class="spawn-item border-b border-zinc-200 pb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-widest text-brand-red font-semibold">03 / Infrastructure & Trust</span>
+                    <h1 class="font-display font-extrabold text-4xl sm:text-6xl text-brand-black mt-2">Engineered for Formal Trust.</h1>
+                </div>
+                <p class="text-zinc-600 text-base sm:text-lg max-w-xl">
+                    Built on Google Firebase Authentication & Analytics, Supabase PostgreSQL & Storage, and portable SQLite—requiring strictly only Camera and Internet access.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="spawn-item white-glass-card rounded-3xl p-8 space-y-4">
+                    <div class="w-11 h-11 rounded-2xl bg-brand-red/10 text-brand-red flex items-center justify-center">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-display font-bold text-2xl text-brand-black">Firebase Auth & Analytics</h3>
+                    <p class="text-sm text-zinc-600 leading-relaxed">
+                        Enterprise-grade identity verification, OAuth 2.0 session protection, and real-time performance telemetry powered by Google Firebase.
+                    </p>
+                </div>
+
+                <div class="spawn-item white-glass-card rounded-3xl p-8 space-y-4">
+                    <div class="w-11 h-11 rounded-2xl bg-brand-red/10 text-brand-red flex items-center justify-center">
+                        <i data-lucide="database-zap" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-display font-bold text-2xl text-brand-black">Supabase Database & Storage</h3>
+                    <p class="text-sm text-zinc-600 leading-relaxed">
+                        Row-Level Security (RLS) PostgreSQL tables and encrypted cloud object buckets keep your invoices, client directories, and assets synchronized.
+                    </p>
+                </div>
+
+                <div class="spawn-item white-glass-card rounded-3xl p-8 space-y-4">
+                    <div class="w-11 h-11 rounded-2xl bg-brand-red/10 text-brand-red flex items-center justify-center">
+                        <i data-lucide="camera" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-display font-bold text-2xl text-brand-black">Camera & Internet Only</h3>
+                    <p class="text-sm text-zinc-600 leading-relaxed">
+                        Zero intrusive permissions. We never request contacts, SMS, location, or background microphone access. Camera is used strictly for barcode scanning.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Full-Screen Legal Panel Triggers -> Changed to Page Router -->
+            <div class="spawn-item white-glass-card rounded-3xl p-8 sm:p-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div class="space-y-2">
+                    <span class="text-xs font-mono uppercase tracking-widest text-brand-red font-semibold">Compliance & Governance</span>
+                    <h3 class="font-display font-bold text-2xl text-brand-black">Inspect Our Legal Documentation</h3>
+                    <p class="text-sm text-zinc-600">Review our transparent data governance, permission manifest, and subscription terms.</p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="switchPage('legal')" class="btn-corporate-red px-5 py-3 rounded-xl text-xs sm:text-sm font-display font-semibold">
+                        View Privacy Policy
+                    </button>
+                    <button onclick="switchPage('legal')" class="btn-corporate-white px-5 py-3 rounded-xl text-xs sm:text-sm font-display font-semibold">
+                        Terms & Conditions
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================================== -->
+        <!-- PAGE 4: PRICING ($3.99 • $9.99 • $39.99 • $99.99)                      -->
+        <!-- ====================================================================== -->
+        <section id="page-pricing" class="hidden space-y-16">
+            <div class="spawn-item border-b border-zinc-200 pb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-widest text-brand-red font-semibold">04 / Commercial Licensing</span>
+                    <h1 class="font-display font-extrabold text-4xl sm:text-6xl text-brand-black mt-2">Predictable Corporate Tiers.</h1>
+                </div>
+                <p class="text-zinc-600 text-base sm:text-lg max-w-xl">
+                    Every subscription unlocks the live Web Console (<span class="font-mono text-xs text-brand-black">pricelister-xi.vercel.app</span>) and upcoming Android App synchronization.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch">
+                <!-- Basic: $3.99 -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 flex flex-col justify-between">
+                    <div class="space-y-5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-display font-bold text-lg text-brand-black">Basic</span>
+                            <span class="px-2.5 py-1 rounded-md text-[11px] font-mono bg-zinc-100 text-zinc-700">STARTER</span>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="font-display font-extrabold text-4xl sm:text-5xl text-brand-black">$3.99</span>
+                            <span class="text-xs text-zinc-500 font-mono">/ month</span>
+                        </div>
+                        <p class="text-xs text-zinc-500">Essential price listing and retail invoicing for solo operators.</p>
+                        <ul class="space-y-3 pt-4 border-t border-zinc-200 text-xs sm:text-sm text-zinc-700">
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Up to 250 Products Listed</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Unlimited Customer Invoices (B2C)</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Standard PDF Invoice Export</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Local SQLite Backup File</li>
+                        </ul>
+                    </div>
+                    <a href="https://pricelister-xi.vercel.app/" target="_blank" rel="noopener noreferrer" class="mt-8 w-full py-3.5 rounded-xl btn-corporate-white font-display font-bold text-xs sm:text-sm text-center block">
+                        Select Basic — $3.99
+                    </a>
+                </div>
+
+                <!-- Small Business: $9.99 -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 flex flex-col justify-between border-2 border-brand-red relative">
+                    <div class="absolute top-4 right-4 px-2.5 py-1 rounded-md bg-brand-red text-white font-mono font-bold text-[10px] uppercase">
+                        Recommended
+                    </div>
+                    <div class="space-y-5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-display font-bold text-lg text-brand-black">Small Business</span>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="font-display font-extrabold text-4xl sm:text-5xl text-brand-black">$9.99</span>
+                            <span class="text-xs text-zinc-500 font-mono">/ month</span>
+                        </div>
+                        <p class="text-xs text-zinc-500">Complete B2C + B2B invoicing with Excel and Supabase sync.</p>
+                        <ul class="space-y-3 pt-4 border-t border-zinc-200 text-xs sm:text-sm text-zinc-800 font-medium">
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Up to 5,000 Products Listed</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Customer (B2C) & Business (B2B)</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> PDF + Excel (.CSV) Batch Export</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Supabase Cloud + SQLite Backup</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> 5 Connected Staff Devices</li>
+                        </ul>
+                    </div>
+                    <a href="https://pricelister-xi.vercel.app/" target="_blank" rel="noopener noreferrer" class="mt-8 w-full py-3.5 rounded-xl btn-corporate-red font-display font-bold text-xs sm:text-sm text-center block">
+                        Start Small Business — $9.99
+                    </a>
+                </div>
+
+                <!-- Large Business: $39.99 -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 flex flex-col justify-between">
+                    <div class="space-y-5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-display font-bold text-lg text-brand-black">Large Business</span>
+                            <span class="px-2.5 py-1 rounded-md text-[11px] font-mono bg-zinc-100 text-zinc-700">SCALE</span>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="font-display font-extrabold text-4xl sm:text-5xl text-brand-black">$39.99</span>
+                            <span class="text-xs text-zinc-500 font-mono">/ month</span>
+                        </div>
+                        <p class="text-xs text-zinc-500">Multi-branch wholesale catalogs and corporate client ledgers.</p>
+                        <ul class="space-y-3 pt-4 border-t border-zinc-200 text-xs sm:text-sm text-zinc-700">
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> 50,000 Products & Multi-Tier Rates</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Custom Branded B2B Tax Invoices</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Client Credit & Balance Tracking</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> 25 Team Members + Role Access</li>
+                        </ul>
+                    </div>
+                    <a href="https://pricelister-xi.vercel.app/" target="_blank" rel="noopener noreferrer" class="mt-8 w-full py-3.5 rounded-xl btn-corporate-white font-display font-bold text-xs sm:text-sm text-center block">
+                        Select Large Business — $39.99
+                    </a>
+                </div>
+
+                <!-- Max: $99.99 -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 flex flex-col justify-between bg-gradient-to-b from-white to-zinc-50/90">
+                    <div class="space-y-5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-display font-bold text-lg text-brand-black">Max</span>
+                            <span class="px-2.5 py-1 rounded-md text-[11px] font-mono bg-brand-black text-white font-semibold">UNLIMITED</span>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="font-display font-extrabold text-4xl sm:text-5xl text-brand-black">$99.99</span>
+                            <span class="text-xs text-zinc-500 font-mono">/ month</span>
+                        </div>
+                        <p class="text-xs text-zinc-500">Unrestricted enterprise volume with dedicated cloud storage.</p>
+                        <ul class="space-y-3 pt-4 border-t border-zinc-200 text-xs sm:text-sm text-zinc-700">
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Unlimited Products & Invoices</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Unlimited Console & App Seats</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Dedicated Supabase Storage Bucket</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Priority 24/7 Enterprise SLA</li>
+                        </ul>
+                    </div>
+                    <a href="https://pricelister-xi.vercel.app/" target="_blank" rel="noopener noreferrer" class="mt-8 w-full py-3.5 rounded-xl btn-corporate-white font-display font-bold text-xs sm:text-sm text-center block">
+                        Deploy Max — $99.99
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================================== -->
+        <!-- PAGE: APPS & OS TOOLS (DEDICATED DOWNLOAD SECTION)                     -->
+        <!-- ====================================================================== -->
+        <section id="page-apps" class="hidden space-y-12">
+            
+            <!-- Dark Hero Section -->
+            <div class="spawn-item rounded-[2.5rem] bg-brand-black p-10 sm:p-20 text-center flex flex-col items-center justify-center shadow-2xl relative overflow-hidden">
+                <!-- Subtle background glow inside the black hero -->
+                <div class="absolute inset-0 bg-gradient-to-b from-brand-red/10 to-transparent pointer-events-none"></div>
+                
+                <span class="relative px-4 py-1.5 rounded-full border border-zinc-700 text-xs font-mono text-zinc-300 mb-8">APPS & OS TOOLS</span>
+                
+                <h1 class="relative font-display font-extrabold text-4xl sm:text-5xl lg:text-7xl text-white leading-tight mb-6">
+                    Get your Business anywhere,<br>
+                    <span class="text-brand-red">on any device and Platform</span>
+                </h1>
+                
+                <p class="relative text-zinc-400 text-base sm:text-lg max-w-2xl font-normal leading-relaxed">
+                    Desktop, mobile, and web apps that auto-sync your data. Manage client catalogs, price lists, and issue invoices from your Mac, PC, iPhone, or Android — seamlessly.
+                </p>
+            </div>
+
+            <!-- Download Cards Grid (Mobile + Desktop) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Mobile Apps Card -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 sm:p-10 flex flex-col h-full border border-zinc-200">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-14 h-14 rounded-2xl bg-zinc-900 text-white flex items-center justify-center shadow-md shadow-zinc-300">
+                            <i data-lucide="smartphone" class="w-7 h-7"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display font-bold text-2xl text-brand-black">Mobile Apps</h3>
+                            <p class="text-xs font-medium text-zinc-500 mt-1">iOS & Android · Free download</p>
+                        </div>
+                    </div>
+                    
+                    <p class="text-sm text-zinc-600 leading-relaxed mb-8">
+                        Manage catalogs, scan barcodes, and generate B2C/B2B invoices from anywhere. The Price Lister mobile app gives you the full power of the platform in your pocket — with real-time sync across all your devices.
+                    </p>
+
+                    <div class="space-y-3 mb-10">
+                        <button onclick="showToast('iOS App build queued for release')" class="w-full flex items-center gap-4 p-3.5 rounded-2xl border border-zinc-200 bg-white hover:border-brand-red transition-all group">
+                            <i data-lucide="apple" class="w-6 h-6 text-brand-black group-hover:text-brand-red transition-colors ml-1"></i>
+                            <div class="text-left">
+                                <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Download on the</div>
+                                <div class="text-sm font-bold text-brand-black">App Store (iOS)</div>
+                            </div>
+                        </button>
+                        <button onclick="showToast('Google Play release in review')" class="w-full flex items-center gap-4 p-3.5 rounded-2xl border border-zinc-200 bg-white hover:border-brand-red transition-all group">
+                            <i data-lucide="play" class="w-6 h-6 text-brand-black group-hover:text-brand-red transition-colors ml-1"></i>
+                            <div class="text-left">
+                                <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Get it on</div>
+                                <div class="text-sm font-bold text-brand-black">Google Play (Android)</div>
+                            </div>
+                        </button>
+                        <button onclick="showToast('Android APK download package preparing')" class="w-full flex items-center gap-4 p-3.5 rounded-2xl border border-zinc-200 bg-white hover:border-brand-red transition-all group">
+                            <i data-lucide="package" class="w-6 h-6 text-brand-black group-hover:text-brand-red transition-colors ml-1"></i>
+                            <div class="text-left">
+                                <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Direct download</div>
+                                <div class="text-sm font-bold text-brand-black">Android APK</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="mt-auto border-t border-zinc-100 pt-6">
+                        <ul class="space-y-3 text-xs sm:text-sm text-zinc-600 font-medium">
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Create & send invoices from your phone</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Hardware barcode & QR scanning</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Local SQLite engine for offline access</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Real-time sync via Supabase Cloud</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Desktop Apps Card (PC, Mac, Linux) -->
+                <div class="spawn-item white-glass-card rounded-3xl p-8 sm:p-10 flex flex-col h-full border border-zinc-200">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-14 h-14 rounded-2xl bg-zinc-900 text-white flex items-center justify-center shadow-md shadow-zinc-300">
+                            <i data-lucide="laptop" class="w-7 h-7"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display font-bold text-2xl text-brand-black">Desktop Apps</h3>
+                            <p class="text-xs font-medium text-zinc-500 mt-1">Windows · macOS · Linux</p>
+                        </div>
+                    </div>
+                    
+                    <p class="text-sm text-zinc-600 leading-relaxed mb-8">
+                        Native desktop applications for PC, Mac, and Linux workstations. Enjoy heavy batch data processing, direct thermal printer integration, and offline-first speed with synchronized cloud storage.
+                    </p>
+
+                    <div class="space-y-3 mb-10">
+                        <button onclick="showToast('Windows Installer (.msi / .exe) preparing')" class="w-full flex items-center gap-4 p-3.5 rounded-2xl border border-zinc-200 bg-white hover:border-brand-red transition-all group">
+                            <i data-lucide="monitor" class="w-6 h-6 text-brand-black group-hover:text-brand-red transition-colors ml-1"></i>
+                            <div class="text-left">
+                                <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Download for Windows</div>
+                                <div class="text-sm font-bold text-brand-black">Windows PC (x64 / ARM64)</div>
+                            </div>
+                        </button>
+                        <button onclick="showToast('macOS Universal Binary (.dmg) preparing')" class="w-full flex items-center gap-4 p-3.5 rounded-2xl border border-zinc-200 bg-white hover:border-brand-red transition-all group">
+                            <i data-lucide="apple" class="w-6 h-6 text-brand-black group-hover:text-brand-red transition-colors ml-1"></i>
+                            <div class="text-left">
+                                <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Download for Mac</div>
+                                <div class="text-sm font-bold text-brand-black">macOS (Apple Silicon & Intel)</div>
+                            </div>
+                        </button>
+                        <button onclick="showToast('Linux package (.deb / .AppImage) preparing')" class="w-full flex items-center gap-4 p-3.5 rounded-2xl border border-zinc-200 bg-white hover:border-brand-red transition-all group">
+                            <i data-lucide="terminal" class="w-6 h-6 text-brand-black group-hover:text-brand-red transition-colors ml-1"></i>
+                            <div class="text-left">
+                                <div class="text-[10px] uppercase tracking-wider text-zinc-400 font-bold">Download for Linux</div>
+                                <div class="text-sm font-bold text-brand-black">Linux (.deb / AppImage / Flatpak)</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="mt-auto border-t border-zinc-100 pt-6">
+                        <ul class="space-y-3 text-xs sm:text-sm text-zinc-600 font-medium">
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> High-performance native workstation performance</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Direct POS, USB & thermal receipt printer integration</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Instant SQLite master file synchronization</li>
+                            <li class="flex items-center gap-3"><i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0"></i> Bulk Excel & PDF ledger processing</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Full-Width Web App Card -->
+            <div class="spawn-item white-glass-card rounded-3xl p-8 sm:p-10 border border-zinc-200">
+                <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 border-b border-zinc-100 pb-8 mb-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-brand-red text-white flex items-center justify-center shadow-md shadow-brand-red/20">
+                            <i data-lucide="globe" class="w-7 h-7"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display font-bold text-2xl text-brand-black">Web Console Application</h3>
+                            <p class="text-xs font-medium text-zinc-500 mt-1">Universal Browser Access · Chrome, Safari, Firefox, Edge</p>
+                        </div>
+                    </div>
+                    <a href="https://pricelister-xi.vercel.app/" target="_blank" rel="noopener noreferrer" class="btn-corporate-red px-6 py-3.5 rounded-xl text-xs sm:text-sm font-display font-bold flex items-center gap-2">
+                        <span>Launch Web Console</span>
+                        <i data-lucide="external-link" class="w-4 h-4"></i>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs sm:text-sm text-zinc-600 font-medium">
+                    <div class="flex items-start gap-3">
+                        <i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0 mt-0.5"></i>
+                        <span>Zero installation needed. Sign in anywhere on Mac, PC, Linux, Chromebook, or tablet.</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0 mt-0.5"></i>
+                        <span>End-to-end synchronized catalogs with Supabase Cloud & Firebase Auth security.</span>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i data-lucide="check" class="w-4 h-4 text-brand-red shrink-0 mt-0.5"></i>
+                        <span>Comprehensive analytics dashboard, B2B/B2C invoicing & one-click batch exports.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====================================================================== -->
+        <!-- PAGE 5: LEGAL (PRIVACY, TERMS, SUBSCRIPTIONS)                          -->
+        <!-- ====================================================================== -->
+        <section id="page-legal" class="hidden space-y-16">
+            <div class="spawn-item border-b border-zinc-200 pb-8 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-widest text-brand-red font-semibold">05 / Corporate Compliance</span>
+                    <h1 class="font-display font-extrabold text-4xl sm:text-6xl text-brand-black mt-2">Legal Governance.</h1>
+                </div>
+                <p class="text-zinc-600 text-base sm:text-lg max-w-xl">
+                    Transparent data governance, terms of service, and our strict minimal-permission manifest.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                <!-- Navigation Sidebar -->
+                <div class="lg:col-span-3 space-y-2 font-medium">
+                    <a href="#privacy" class="block px-4 py-3 rounded-xl bg-white border border-zinc-200 text-brand-black hover:border-brand-red transition-colors shadow-sm">Privacy Policy</a>
+                    <a href="#terms" class="block px-4 py-3 rounded-xl bg-transparent text-zinc-600 hover:bg-white hover:border border-transparent hover:border-zinc-200 transition-colors">Terms & Conditions</a>
+                    <a href="#subscription" class="block px-4 py-3 rounded-xl bg-transparent text-zinc-600 hover:bg-white hover:border border-transparent hover:border-zinc-200 transition-colors">Subscription Policy</a>
+                </div>
+
+                <!-- Content Area -->
+                <div class="lg:col-span-9 space-y-12">
+                    <!-- Privacy Policy -->
+                    <div id="privacy" class="spawn-item white-glass-card rounded-3xl p-8 sm:p-10">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-brand-red text-white flex items-center justify-center">
+                                <i data-lucide="shield" class="w-5 h-5"></i>
+                            </div>
+                            <h2 class="font-display font-bold text-2xl text-brand-black">Privacy Policy</h2>
+                        </div>
+                        <div class="space-y-6 text-sm sm:text-base text-zinc-700 leading-relaxed">
+                            <p>Price Lister is engineered under a formal corporate privacy standard. Across both our Website Console (<code class="font-mono text-brand-red">https://pricelister-xi.vercel.app/</code>) and our Android application architecture, we require strictly <strong>Camera</strong> and <strong>Internet</strong> access. We never access or harvest device contacts, SMS logs, GPS coordinates, or microphone audio.</p>
+                            <h3 class="font-display font-bold text-lg text-brand-black mt-4">Firebase Authentication & Analytics</h3>
+                            <p>User authentication is managed via Google Firebase Authentication using encrypted JWT session tokens. Firebase Analytics is utilized strictly to monitor application stability, crash-free rates, and aggregate performance metrics without selling or sharing personal business data.</p>
+                            <h3 class="font-display font-bold text-lg text-brand-black mt-4">Supabase Database & Storage</h3>
+                            <p>All product price lists, Customer Invoices (B2C), Business Invoices (B2B), and client records are isolated per account using Supabase Row-Level Security (RLS) policies and stored locally in a high-speed SQLite database for offline resilience.</p>
+                        </div>
+                    </div>
+
+                    <!-- Terms -->
+                    <div id="terms" class="spawn-item white-glass-card rounded-3xl p-8 sm:p-10">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-brand-black text-white flex items-center justify-center">
+                                <i data-lucide="scale" class="w-5 h-5"></i>
+                            </div>
+                            <h2 class="font-display font-bold text-2xl text-brand-black">Terms & Conditions</h2>
+                        </div>
+                        <div class="space-y-6 text-sm sm:text-base text-zinc-700 leading-relaxed">
+                            <h3 class="font-display font-bold text-lg text-brand-black">1. Scope of Service</h3>
+                            <p>Price Lister provides an enterprise catalog and invoicing platform accessible via the live Web Console and upcoming mobile application.</p>
+                            <h3 class="font-display font-bold text-lg text-brand-black mt-4">2. Commercial Invoicing (B2C & B2B)</h3>
+                            <p>Users are responsible for verifying that tax percentages (VAT, GST, Sales Tax) and corporate registration numbers entered on Customer Invoices and Business Invoices comply with local tax authorities.</p>
+                        </div>
+                    </div>
+
+                    <!-- Subscription -->
+                    <div id="subscription" class="spawn-item white-glass-card rounded-3xl p-8 sm:p-10">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-10 h-10 rounded-xl bg-zinc-100 text-brand-black border border-zinc-200 flex items-center justify-center">
+                                <i data-lucide="credit-card" class="w-5 h-5"></i>
+                            </div>
+                            <h2 class="font-display font-bold text-2xl text-brand-black">Subscription Policy</h2>
+                        </div>
+                        <div class="space-y-6 text-sm sm:text-base text-zinc-700 leading-relaxed">
+                            <p>Subscriptions may be upgraded, downgraded, or cancelled at any time. Upon cancellation, your local SQLite database backups and exported PDF/Excel spreadsheets remain permanently accessible to you without lock-in.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ========================================================================== -->
+    <!-- CORPORATE MINIMALIST FOOTER                                                -->
+    <!-- ========================================================================== -->
+    <footer class="relative z-10 border-t border-zinc-200/90 bg-white/90 backdrop-blur-xl mt-24">
+        <div class="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 3xl:px-16 py-14">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-zinc-200">
+                
+                <!-- Col 1 -->
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <img src="PriceLister.svg" alt="Price Lister Logo" class="w-10 h-10" style="filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.1));" />
+                        <span class="font-display font-extrabold text-xl text-brand-black">PRICE LISTER<span></span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-zinc-500 max-w-sm leading-relaxed">
+                        Enterprise Product Catalog, Customer & Business Invoicing, PDF/Excel Reporting, and SQLite + Supabase Backup Infrastructure.
+                    </p>
+                    <div class="flex items-center gap-2 text-xs text-zinc-600 font-mono">
+                        <span class="w-2 h-2 rounded-full bg-brand-red"></span>
+                        <span>Strictly Camera & Internet Permissions Only</span>
+                    </div>
+                </div>
+
+                <!-- Col 2: Sitemap -->
+                <div class="lg:col-span-2 space-y-3">
+                    <div class="font-mono font-semibold text-xs text-brand-black uppercase tracking-wider">Pages</div>
+                    <ul class="space-y-2 text-xs sm:text-sm text-zinc-600">
+                        <li><button onclick="switchPage('home')" class="hover:text-brand-red transition-colors">Home</button></li>
+                        <li><button onclick="switchPage('explore')" class="hover:text-brand-red transition-colors">Features</button></li>
+                        <li><button onclick="switchPage('about')" class="hover:text-brand-red transition-colors">Architecture</button></li>
+                        <li><button onclick="switchPage('pricing')" class="hover:text-brand-red transition-colors">Pricing</button></li>
+                        <li><button onclick="switchPage('apps')" class="hover:text-brand-red transition-colors">Get</button></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Platforms -->
+                <div class="lg:col-span-3 space-y-3">
+                    <div class="font-mono font-semibold text-xs text-brand-black uppercase tracking-wider">Platforms & Tiers</div>
+                    <ul class="space-y-2 text-xs sm:text-sm text-zinc-600">
+                        <li><a href="https://pricelister-xi.vercel.app/" target="_blank" rel="noopener noreferrer" class="text-brand-red font-semibold hover:underline">Web Console (pricelister-xi.vercel.app)</a></li>
+                        <li><a href="#" class="hover:text-brand-black transition-colors">Android Play Store App</a></li>
+                        <li><button onclick="switchPage('pricing')" class="hover:text-brand-black transition-colors">Basic $3.99 • Small Biz $9.99</button></li>
+                        <li><button onclick="switchPage('pricing')" class="hover:text-brand-black transition-colors">Large Biz $39.99 • Max $99.99</button></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Full-Screen Legal Triggers -->
+                <div class="lg:col-span-3 space-y-3">
+                    <div class="font-mono font-semibold text-xs text-brand-black uppercase tracking-wider">Legal Governance</div>
+                    <ul class="space-y-2 text-xs sm:text-sm text-zinc-600">
+                        <li>
+                            <button onclick="switchPage('legal')" class="hover:text-brand-red transition-colors flex items-center gap-1.5 font-medium">
+                                <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-brand-red"></i>
+                                <span>Privacy Policy</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="switchPage('legal')" class="hover:text-brand-red transition-colors flex items-center gap-1.5 font-medium">
+                                <i data-lucide="scale" class="w-3.5 h-3.5 text-brand-red"></i>
+                                <span>Terms & Conditions</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="switchPage('legal')" class="hover:text-brand-red transition-colors flex items-center gap-1.5 font-medium">
+                                <i data-lucide="credit-card" class="w-3.5 h-3.5 text-brand-red"></i>
+                                <span>Subscription Policy</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 font-mono">
+                <div>© 2026 PRICE LISTER CORP. ALL RIGHTS RESERVED.</div>
+                <div>FIREBASE AUTH • SUPABASE DB & STORAGE • SQLITE LOCAL</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ========================================================================== -->
+    <!-- TOAST NOTIFICATION                                                         -->
+    <!-- ========================================================================== -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 z-50 hidden items-center gap-3 px-5 py-3.5 rounded-2xl bg-brand-black text-white shadow-xl text-xs sm:text-sm">
+        <i data-lucide="check-circle-2" class="w-4 h-4 text-brand-red shrink-0"></i>
+        <span id="toastMessage">Action completed</span>
+    </div>
+
+    <!-- ========================================================================== -->
+    <!-- INTERACTIVE MOTION, MOUSE SPAWN & APPLICATION SCRIPT                       -->
+    <!-- ========================================================================== -->
+    <script>
+        // --- Real-Time Mouse Interactive Tracking & Proximity Spawn ---
+        window.addEventListener('mousemove', (e) => {
+            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+
+            // Update local coordinates on glossy white cards for subtle glass border glow
+            document.querySelectorAll('.white-glass-card').forEach(card => {
+                const rect = card.getBoundingClientRect();
+                card.style.setProperty('--card-mouse-x', `${e.clientX - rect.left}px`);
+                card.style.setProperty('--card-mouse-y', `${e.clientY - rect.top}px`);
+            });
+
+            // Spawn any nearby unspawned elements when cursor approaches them
+            document.querySelectorAll('.spawn-item:not(.spawned)').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+                if (dist < 420) {
+                    el.classList.add('spawned');
+                }
+            });
+        });
+
+        // --- 0-to-Load Staggered Scroll & Viewport Spawn Engine ---
+        let spawnObserver;
+        function initSpawnObserver() {
+            if (spawnObserver) spawnObserver.disconnect();
+
+            spawnObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry, idx) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.classList.add('spawned');
+                        }, idx * 75);
+                    }
+                });
+            }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+            document.querySelectorAll('.spawn-item').forEach(el => {
+                spawnObserver.observe(el);
+            });
+        }
+
+        function triggerActivePageSpawns(pageId) {
+            const container = document.getElementById('page-' + pageId);
+            if (!container) return;
+            const items = container.querySelectorAll('.spawn-item');
+            items.forEach((el, index) => {
+                el.classList.remove('spawned');
+                setTimeout(() => {
+                    el.classList.add('spawned');
+                }, 60 + index * 80);
+            });
+        }
+
+        // --- SPA Page Switcher ---
+        function switchPage(pageId) {
+            const pages = ['home', 'explore', 'about', 'pricing', 'apps', 'legal'];
+            pages.forEach(p => {
+                const el = document.getElementById('page-' + p);
+                if (el) {
+                    el.classList.toggle('hidden', p !== pageId);
+                }
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            triggerActivePageSpawns(pageId);
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobileNavDrawer').classList.toggle('hidden');
+        }
+
+        // --- Toast Notification ---
+        let toastTimer = null;
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.remove('hidden');
+            toast.classList.add('flex');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.classList.remove('flex');
+            }, 3200);
+        }
+
+        // --- Initialize on Load ---
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initSpawnObserver();
+            triggerActivePageSpawns('home');
+        });
+    </script>
+</body>
+</html>
